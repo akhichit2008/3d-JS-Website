@@ -2,6 +2,7 @@ import './index.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import {Text} from 'troika-three-text';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 const scene = new THREE.Scene();
@@ -21,35 +22,21 @@ camera.position.setX(-3);
 
 renderer.render(scene, camera);
 
-// controls
-const controls = new OrbitControls( camera, renderer.domElement );
+// Cube
 
+const createSimpleCube = () => {
+  let geometry = new THREE.BoxGeometry(3,3,3);
+  let texture = new THREE.TextureLoader().load('assets/gfx/gift-box.PNG');
+  let material = new THREE.MeshBasicMaterial({ map : texture });
+  let cube = new THREE.Mesh(geometry,material);
+  scene.add(cube);
+  camera.position.z = 5;
+}
+
+createSimpleCube();
 
 // Loading custom models
 const loader = new GLTFLoader();
-
-/*
-loader.load( 'assets/models/sedanSports.glb', function ( gltf ) {
-
-	scene.add( gltf.scene);
-  gltf.scene.rotation.x += 0.10;
-  gltf.scene.rotation.z = 0.99;
-  gltf.scene.rotation.y += 0.10;
-  gltf.scene.scale.set(0.50, 0.50, 0.50 );
-  let tempONScrollFunc = () => {
-    const t = document.body.getBoundingClientRect().top;
-    gltf.scene.position.z = t * 0.01;
-    gltf.scene.position.x = t * 0.0002;
-    gltf.scene.rotation.y = t * 0.0002;
-  }
-  document.body.onscroll = tempONScrollFunc;
-  tempONScrollFunc();
-
-}, undefined, function ( error ) {
-
-	console.error( error );
-
-} );*/
 
 loader.load( 'assets/models/large-building.glb', function ( gltf ) {
 
@@ -71,22 +58,23 @@ pointLight.position.set(5, 5, 5);
 const ambientLight = new THREE.AmbientLight(0xffffff);
 scene.add(pointLight, ambientLight);
 
-const getParticles = () => {
-  const geometry = new THREE.SphereGeometry(0.25, 24, 24);
-  const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
-  const star = new THREE.Mesh(geometry, material);
+const lightHelper = new THREE.PointLightHelper(pointLight);
+const grid = new THREE.GridHelper(200,50);
 
-  const [x, y, z] = Array(3)
+const getParticles = await(async function() {
+  let geometry = new THREE.SphereGeometry(0.25, 24, 24);
+  let material = new THREE.MeshStandardMaterial({ color: 0xffffff });
+  let snow = new THREE.Mesh(geometry, material);
+
+  let [x, y, z] = Array(3)
     .fill()
     .map(() => THREE.MathUtils.randFloatSpread(100));
 
-  star.position.set(x, y, z);
-  scene.add(star);
-}
+  snow.position.set(x, y, z);
+  scene.add(snow);
+});
 
-Array(1000).fill().forEach(getParticles);
-
-// Background
+Array().fill().forEach(getParticles);
 
 const bgTexture = new THREE.TextureLoader().load('assets/gfx/sky.jpg');
 scene.background = bgTexture;
@@ -101,6 +89,19 @@ const earth = new THREE.Mesh(
     normalMap: normalTexture,
   })
 );
+
+// content
+
+const textMesh = new Text();
+scene.add(textMesh);
+
+const section1Text = () => {
+  textMesh.text = "I'm Akhilesh";
+  textMesh.fontSize = 0.6;
+  text.position.z = camera.position.z;
+  text.color = 0x9966FF;
+  textMesh.sync();
+}
 
 scene.add(earth);
 
@@ -122,7 +123,10 @@ function moveCamera() {
 document.body.onscroll = moveCamera;
 moveCamera();
 
-// Animation Loop
+
+// Orbit controls
+const controls = new OrbitControls( camera, renderer.domElement );
+
 
 function animate() {
   requestAnimationFrame(animate);
